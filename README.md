@@ -294,16 +294,16 @@ H2 검증은 MySQL 고유 동작 검증을 대체하지 않습니다.
 
 ## AI-DLC 작업 방법
 
-이 저장소는 Issue 하나를 기준으로 Main Codex와 역할별 Subagent가 개발을 진행하는 절차를 설정해 두었습니다. 사용자는 PM이자 최종 승인자입니다. Codex에게 다음과 같이 자연어로 요청할 수 있습니다.
+공통 운영 루트 [ai-dlc](https://github.com/marcel615/ai-dlc)를 연 Codex 세션에서 프로젝트와 역할을 지정합니다. Main과 역할별 Agent는 한 작업을 기준으로 진행하며, 사용자가 PM이자 최종 승인자입니다. 다음은 자연어 요청 예시입니다.
 
-- 다음 Issue 선정부터 시작: `작업 시작해. 다음 Issue를 확인해줘.`
-- 특정 Issue 시작: `Issue #번호 작업 시작해.`
-- 기능 아이디어 제안: `기능 아이디어 제안해.`
-- 승인된 후보 정제: `백로그 정제해.`
-- 머지 후 정리: `PR 머지했어. 확인 후 기준 브랜치 최신화와 브랜치 정리를 진행해.`
+- 다음 백엔드 작업 시작: `Ask-Teacher 백엔드 작업 시작하자.`
+- 특정 작업 시작: `Ask-Teacher 백엔드 ABC-123 작업 시작해.`
+- 기능 아이디어 제안: `Ask-Teacher 기능 아이디어 제안해.`
+- 승인된 후보 정제: `Ask-Teacher 백로그 정제해.`
+- 머지 후 정리: `Ask-Teacher 백엔드 ABC-123 작업 마무리해.`
 
-이 문구는 고정된 CLI 명령이 아닌 예시입니다. 더 많은 예시는 [빠른 지시문](docs/prompts/quick.md)을 참고하세요.
-기능 제안은 설정의 `project.approval_values.pending` 상태인 Project Draft로 등록되며, 사용자가 승인한 후보만 백로그 정제에서 정식 Issue화를 검토합니다. 정제 후 개발은 자동 시작하지 않습니다.
+이 문구는 고정된 CLI 명령이 아닌 예시입니다. 더 많은 예시는 공통 저장소의 [빠른 지시문](https://github.com/marcel615/ai-dlc/blob/main/docs/prompts/quick.md)을 참고하세요.
+기능 후보 발굴과 승인된 후보의 정제는 Orchestrator가 설정된 작업 추적 도구에서 수행합니다. 후보 승인과 개발 착수는 별개이며, 정제 후 개발은 자동 시작하지 않습니다.
 
 ### 역할과 진행 순서
 
@@ -325,14 +325,14 @@ H2 검증은 MySQL 고유 동작 검증을 대체하지 않습니다.
 
 ### 지침과 현재 상태
 
-- [ai-dlc.yaml](ai-dlc.yaml): 활성 서비스의 저장소, Project, 명세와 개발 설정
-- [AGENTS.md](AGENTS.md): 권한, 브랜치, 테스트와 기록 규칙
-- [Issue 기반 개발 절차](.agents/skills/issue-driven-dev/SKILL.md): 선정 기준, 품질 게이트, 리뷰와 재개 절차
-- [기능 아이디어 제안](.agents/skills/feature-discovery/SKILL.md), [백로그 정제](.agents/skills/backlog-refinement/SKILL.md): 후보 제안과 승인된 후보의 Issue화 절차
-- [역할 설정](.codex/agents/): Architect, Builder, Reporter 설정
+- [ai-dlc.yaml](ai-dlc.yaml): 활성 서비스의 저장소, 작업 추적, 명세와 개발 설정
+- [공통 운영 규칙](https://github.com/marcel615/ai-dlc/blob/main/AGENTS.md): 프로젝트·역할 선택과 작업 권한
+- [백엔드 개발 Skill](https://github.com/marcel615/ai-dlc/blob/main/.agents/skills/backend-issue-driven-dev/SKILL.md): 선정 기준, 품질 게이트, 리뷰와 재개 절차
+- [기능 아이디어 제안](https://github.com/marcel615/ai-dlc/blob/main/.agents/skills/feature-discovery/SKILL.md), [백로그 정제](https://github.com/marcel615/ai-dlc/blob/main/.agents/skills/backlog-refinement/SKILL.md): 후보 제안과 승인된 후보 정제 절차
+- [공통 역할 설정](https://github.com/marcel615/ai-dlc/tree/main/.codex/agents): Architect, Builder, Reporter 설정
 - [현재 작업 설계](docs/current-task.md), [임시 작업 기록](docs/current-work-log.md), [devlog](docs/devlog/): 작업 범위와 검증 기록
 
-위 내용은 저장소에 설정된 절차를 설명합니다. 각 실행의 테스트·CI·리뷰 성공 여부는 해당 작업에서 별도로 확인해야 합니다. `ai-dlc.yaml`의 활성 서비스 `project.url`이 가리키는 GitHub Project 기반 운영을 도입 중이며 자동 상태 전환의 실제 동작과 전체 연동은 통합 검증 전입니다. Jira 연동은 구현되어 있지 않습니다.
+작업 추적 제공자와 상태는 `ai-dlc.yaml`의 활성 서비스 설정을 따릅니다. Jira에서는 사용자가 착수 가능한 작업을 정하고 PR을 직접 머지합니다. 테스트·CI·리뷰 및 실제 상태 전환 결과는 각 작업에서 확인해야 합니다.
 
 ## 트러블슈팅
 
