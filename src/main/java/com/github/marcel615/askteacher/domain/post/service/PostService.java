@@ -92,9 +92,10 @@ public class PostService {
                 .orElseThrow(() -> new CustomException(ErrorCode.POST_NOT_FOUND));
 
         boolean likedByMe = userId != null && postLikeRepository.existsByPostIdAndUserId(postId, userId);
+        boolean isAuthor = userId != null && userId.equals(post.getUser().getId());
         List<PostFile> postFiles = postFileRepository.findByPostIdOrderByCreatedAtAsc(postId);
 
-        return PostDetailResponse.from(post, likedByMe, postFiles);
+        return PostDetailResponse.from(post, likedByMe, isAuthor, postFiles);
     }
 
     @Transactional

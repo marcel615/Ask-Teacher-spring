@@ -119,11 +119,30 @@ class PostServiceTest {
             when(posts.findWithUserAndCategoryByIdAndDeletedFalse(3L)).thenReturn(Optional.of(post));
             when(likes.existsByPostIdAndUserId(3L, 1L)).thenReturn(true);
             when(files.findByPostIdOrderByCreatedAtAsc(3L)).thenReturn(List.of(PostFile.create(post, "a.png", "stored.png", "path", "image/png", 1)));
-            assertThat(service.getPost(3L).likedByMe()).isFalse();
+            PostDetailResponse anonymousResult = service.getPost(3L);
+            assertThat(anonymousResult.likedByMe()).isFalse();
+            assertThat(anonymousResult.isAuthor()).isFalse();
             var result = service.getPost(3L, 1L);
             assertThat(result.likedByMe()).isTrue();
+            assertThat(result.isAuthor()).isTrue();
             assertThat(result.files().get(0).fileUrl()).isEqualTo("/files/stored.png");
             assertThat(result.userName()).isEqualTo("nick");
+        }
+
+        @DisplayName("작성자 여부는 좋아요 여부와 독립적으로 계산한다")
+        @Test void authorshipIsIndependentOfLikes() {
+            when(posts.findWithUserAndCategoryByIdAndDeletedFalse(3L)).thenReturn(Optional.of(post));
+            when(likes.existsByPostIdAndUserId(3L, 1L)).thenReturn(false);
+            when(likes.existsByPostIdAndUserId(3L, 9L)).thenReturn(true);
+
+            PostDetailResponse authorResult = service.getPost(3L, 1L);
+            PostDetailResponse otherUserResult = service.getPost(3L, 9L);
+
+            assertThat(authorResult.isAuthor()).isTrue();
+            assertThat(authorResult.likedByMe()).isFalse();
+            assertThat(otherUserResult.isAuthor()).isFalse();
+            assertThat(otherUserResult.likedByMe()).isTrue();
+            verifyNoInteractions(users);
         }
 
         @DisplayName("없는 게시글 상세 조회는 게시글 없음 오류를 반환한다")

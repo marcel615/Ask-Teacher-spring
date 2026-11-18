@@ -1,5 +1,9 @@
 package com.github.marcel615.askteacher.integration;
 
+import com.github.marcel615.askteacher.domain.category.entity.Category;
+import com.github.marcel615.askteacher.domain.category.repository.CategoryRepository;
+import com.github.marcel615.askteacher.domain.post.entity.Post;
+import com.github.marcel615.askteacher.domain.post.repository.PostRepository;
 import com.github.marcel615.askteacher.domain.user.entity.User;
 import com.github.marcel615.askteacher.domain.user.repository.UserRepository;
 import com.github.marcel615.askteacher.global.security.jwt.JwtTokenProvider;
@@ -20,6 +24,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import tools.jackson.databind.ObjectMapper;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -39,6 +44,10 @@ class AuthRedisFailureIntegrationTest {
     PasswordEncoder passwords;
     @Autowired
     JwtTokenProvider tokens;
+    @Autowired
+    PostRepository posts;
+    @Autowired
+    CategoryRepository categories;
     User user;
     @BeforeEach
     void createUser() {
@@ -47,7 +56,44 @@ class AuthRedisFailureIntegrationTest {
 
     @AfterEach
     void clean() {
+        posts.deleteAllInBatch();
+        categories.deleteAllInBatch();
         users.deleteAllInBatch();
+    }
+
+    @Nested
+    @DisplayName("Redis 연결 장애 시 공개 게시글 상세")
+    class PostDetails {
+        long postId;
+
+        @BeforeEach
+        void createPost() {
+            Category category = categories.saveAndFlush(Category.createCategory("Offline Java"));
+            postId = posts.saveAndFlush(Post.createPost(user, category, "title", "body")).getId();
+        }
+
+        @DisplayName("인증된 작성자여도 인증 서비스 장애를 익명으로 처리하지 않고 503을 반환한다")
+        @Test
+        void authenticatedDetailReturns503() throws Exception {
+            String access = tokens.createAccessToken(user.getId(), user.getRole(), "session");
+
+            mvc.perform(get("/api/posts/{id}", postId)
+                            .header("Authorization", "Bearer " + access))
+                    .andExpect(status().isServiceUnavailable())
+                    .andExpect(jsonPath("$.status").value(503))
+                    .andExpect(jsonPath("$.isAuthor").doesNotExist());
+        }
+
+        @DisplayName("토큰 없는 공개 상세는 인증 서비스 장애 중에도 작성자 여부 false로 조회된다")
+        @Test
+        void anonymousDetailDoesNotDependOnRedis() throws Exception {
+            mvc.perform(get("/api/posts/{id}", postId))
+                    .andExpect(status().isOk())
+                    .andExpect(header().string("Cache-Control", containsString("no-store")))
+                    .andExpect(jsonPath("$.isAuthor").isBoolean())
+                    .andExpect(jsonPath("$.isAuthor").value(false))
+                    .andExpect(jsonPath("$.userName").value("offline"));
+        }
     }
 
     @Nested

@@ -14,15 +14,17 @@ public record PostDetailResponse(
         String content,
         long likeCount,
         boolean likedByMe,
+        boolean isAuthor,
         LocalDateTime createdAt,
         List<PostFileResponse> files
 ) {
 
-    public static PostDetailResponse from(Post post, boolean likedByMe) {
-        return from(post, likedByMe, List.of());
-    }
-
-    public static PostDetailResponse from(Post post, boolean likedByMe, List<PostFile> postFiles) {
+    public static PostDetailResponse from(
+            Post post,
+            boolean likedByMe,
+            boolean isAuthor,
+            List<PostFile> postFiles
+    ) {
         return new PostDetailResponse(
                 post.getId(),
                 post.getUser().getNickname(),
@@ -31,6 +33,7 @@ public record PostDetailResponse(
                 post.getContent(),
                 post.getLikeCount(),
                 likedByMe,
+                isAuthor,
                 post.getCreatedAt(),
                 postFiles.stream()
                         .map(PostFileResponse::from)
