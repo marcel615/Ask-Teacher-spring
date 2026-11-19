@@ -75,10 +75,10 @@ public class PostService {
         PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
         String searchKeyword = normalizeKeyword(keyword);
 
-        return PostPageResponse.from(
-                postRepository.searchPosts(searchKeyword, categoryId, pageRequest)
-                        .map(PostListResponse::from)
-        );
+        var posts = searchKeyword == null
+                ? postRepository.findPosts(categoryId, pageRequest)
+                : postRepository.searchPosts(searchKeyword, categoryId, pageRequest);
+        return PostPageResponse.from(posts.map(PostListResponse::from));
     }
 
     @Transactional(readOnly = true)
