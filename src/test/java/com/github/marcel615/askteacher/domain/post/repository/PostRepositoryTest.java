@@ -37,10 +37,10 @@ class PostRepositoryTest extends RepositoryTestSupport {
             assertThat(first.getContent().get(0).getUser().getNickname()).isEqualTo("alice");
             assertThat(repository.searchPosts("needle", java.getId(), PageRequest.of(1, 1, Sort.by("createdAt").descending())).getContent())
                     .extracting(Post::getId).containsExactly(old.getId());
-            assertThat(repository.searchPosts(null, null, Pageable.unpaged()).getContent()).extracting(Post::getId)
+            assertThat(repository.findPosts(null, Pageable.unpaged()).getContent()).extracting(Post::getId)
                     .containsExactlyInAnyOrder(old.getId(), recent.getId(), other.getId());
             assertThat(repository.searchPosts("absent", null, Pageable.unpaged())).isEmpty();
-            assertThat(repository.searchPosts(null, spring.getId(), Pageable.unpaged()).getContent()).extracting(Post::getId).containsExactly(other.getId());
+            assertThat(repository.findPosts(spring.getId(), Pageable.unpaged()).getContent()).extracting(Post::getId).containsExactly(other.getId());
             assertThat(repository.findByDeletedFalseOrderByCreatedAtDesc()).extracting(Post::getId)
                     .containsExactly(other.getId(), recent.getId(), old.getId());
             assertThat(repository.findByIdAndDeletedFalse(deleted.getId())).isEmpty();

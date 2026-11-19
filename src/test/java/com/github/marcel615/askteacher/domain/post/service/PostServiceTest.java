@@ -101,7 +101,7 @@ class PostServiceTest {
 
         @DisplayName("빈 검색어는 검색 필터를 적용하지 않는다")
         @Test void blankSearchIsUnfiltered() {
-            when(posts.searchPosts(isNull(), isNull(), any())).thenReturn(Page.empty());
+            when(posts.findPosts(isNull(), any())).thenReturn(Page.empty());
             assertThat(service.getPosts("  ", null, 0, 10).content()).isEmpty();
             assertThat(service.getPosts(null, null, 0, 10).content()).isEmpty();
         }

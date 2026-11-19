@@ -22,7 +22,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             select p
             from Post p
             where p.deleted = false
-              and (:keyword is null or p.title like concat('%', :keyword, '%') or p.content like concat('%', :keyword, '%'))
+              and (p.title like concat('%', :keyword, '%') or p.content like concat('%', :keyword, '%'))
               and (:categoryId is null or p.category.id = :categoryId)
             """)
     Page<Post> searchPosts(
@@ -30,6 +30,15 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             @Param("categoryId") Long categoryId,
             Pageable pageable
     );
+
+    @EntityGraph(attributePaths = {"user", "category"})
+    @Query("""
+            select p
+            from Post p
+            where p.deleted = false
+              and (:categoryId is null or p.category.id = :categoryId)
+            """)
+    Page<Post> findPosts(@Param("categoryId") Long categoryId, Pageable pageable);
 
     @EntityGraph(attributePaths = {"user", "category"})
     Optional<Post> findWithUserAndCategoryByIdAndDeletedFalse(Long id);
