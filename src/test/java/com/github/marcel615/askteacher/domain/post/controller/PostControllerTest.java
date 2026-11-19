@@ -19,6 +19,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Stream;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -128,16 +129,29 @@ class PostControllerTest extends WebTestSupport {
 
         @DisplayName("상세 조회에 선택적 사용자를 전달하고 삭제는 빈 본문을 반환한다")
         @Test void detailPassesOptionalPrincipalAndDeleteReturnsNoBody() throws Exception {
-            when(service.getPost(3L, null)).thenReturn(new PostDetailResponse(3L, "nick", "Java", "title", "body", 2, false, LocalDateTime.now(), List.of()));
+            LocalDateTime createdAt = LocalDateTime.of(2026, 1, 1, 0, 0);
+            when(service.getPost(3L, null)).thenReturn(new PostDetailResponse(
+                    3L, "nick", "Java", "title", "body", 2, false, false, createdAt, List.of()
+            ));
+            when(service.getPost(3L, 7L)).thenReturn(new PostDetailResponse(
+                    3L, "nick", "Java", "title", "body", 2, false, true, createdAt, List.of()
+            ));
             mvc.perform(get("/api/posts/3"))
                     .andExpect(status().isOk())
+                    .andExpect(header().string("Cache-Control", containsString("no-store")))
+                    .andExpect(jsonPath("$.isAuthor").isBoolean())
+                    .andExpect(jsonPath("$.isAuthor").value(false))
+                    .andExpect(jsonPath("$.author").doesNotExist())
                     .andExpect(jsonPath("$.likedByMe").value(false))
                     .andExpect(jsonPath("$.likeCount").value(2))
                     .andExpect(jsonPath("$.files").isEmpty());
             verify(service).getPost(3L, null);
             mvc.perform(get("/api/posts/3")
                             .with(authenticated()))
-                    .andExpect(status().isOk());
+                    .andExpect(status().isOk())
+                    .andExpect(header().string("Cache-Control", containsString("no-store")))
+                    .andExpect(jsonPath("$.isAuthor").isBoolean())
+                    .andExpect(jsonPath("$.isAuthor").value(true));
             verify(service).getPost(3L, 7L);
             mvc.perform(delete("/api/posts/3")
                             .with(authenticated()))
